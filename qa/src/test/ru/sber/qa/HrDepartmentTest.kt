@@ -1,19 +1,17 @@
 package ru.sber.qa
 
-import io.mockk.every
-import io.mockk.mockk
-import io.mockk.verify
+import io.mockk.*
 import org.junit.jupiter.api.*
 
 import org.junit.jupiter.api.Assertions.*
 import java.time.*
 
 internal class HrDepartmentTest {
+    private lateinit var certificateRequest: CertificateRequest
 
-    @AfterEach
-    fun tearDown() {
-        HrDepartment.incomeBox.clear()
-        HrDepartment.outcomeOutcome.clear()
+    @BeforeEach
+    fun setUp() {
+        certificateRequest = mockk()
     }
 
     @Test
@@ -22,7 +20,6 @@ internal class HrDepartmentTest {
         HrDepartment.clock = Clock.fixed(
             Instant.parse("2021-09-02T10:00:00Z"),
             ZoneOffset.UTC)
-        val certificateRequest = mockk<CertificateRequest>()
         every { certificateRequest.certificateType } returns CertificateType.LABOUR_BOOK
 
         //when
@@ -34,6 +31,7 @@ internal class HrDepartmentTest {
         verify(exactly = 1) {
             certificateRequest.certificateType
         }
+        confirmVerified(certificateRequest)
         assertEquals(listOf(certificateRequest), HrDepartment.incomeBox, "Should be equal")
     }
 
@@ -43,7 +41,6 @@ internal class HrDepartmentTest {
         HrDepartment.clock = Clock.fixed(
             Instant.parse("2021-09-03T10:00:00Z"),
             ZoneOffset.UTC)
-        val certificateRequest = mockk<CertificateRequest>()
         every { certificateRequest.certificateType } returns CertificateType.LABOUR_BOOK
 
         //when
@@ -55,6 +52,7 @@ internal class HrDepartmentTest {
         verify(exactly = 1) {
             certificateRequest.certificateType
         }
+        confirmVerified(certificateRequest)
         assertEquals("Не разрешено принять запрос на справку", exception.message)
     }
 
@@ -64,7 +62,6 @@ internal class HrDepartmentTest {
         HrDepartment.clock = Clock.fixed(
             Instant.parse("2021-09-04T10:00:00Z"),
             ZoneOffset.UTC)
-        val certificateRequest = mockk<CertificateRequest>()
         every { certificateRequest.certificateType } returns CertificateType.LABOUR_BOOK
 
         //when
@@ -76,6 +73,7 @@ internal class HrDepartmentTest {
         verify(exactly = 0) {
             certificateRequest.certificateType
         }
+        confirmVerified(certificateRequest)
         assertEquals("Заказ справков в выходной день не работает", exception.message)
     }
 
@@ -85,7 +83,6 @@ internal class HrDepartmentTest {
         HrDepartment.clock = Clock.fixed(
             Instant.parse("2021-09-02T10:00:00Z"),
             ZoneOffset.UTC)
-        val certificateRequest = mockk<CertificateRequest>()
         every { certificateRequest.certificateType } returns CertificateType.NDFL
 
         //when
@@ -97,6 +94,7 @@ internal class HrDepartmentTest {
         verify(exactly = 1) {
             certificateRequest.certificateType
         }
+        confirmVerified(certificateRequest)
         assertEquals("Не разрешено принять запрос на справку", exception.message)
     }
 
@@ -106,7 +104,6 @@ internal class HrDepartmentTest {
         HrDepartment.clock = Clock.fixed(
             Instant.parse("2021-09-03T10:00:00Z"),
             ZoneOffset.UTC)
-        val certificateRequest = mockk<CertificateRequest>()
         every { certificateRequest.certificateType } returns CertificateType.NDFL
 
         //when
@@ -117,6 +114,7 @@ internal class HrDepartmentTest {
         verify(exactly = 1) {
             certificateRequest.certificateType
         }
+        confirmVerified(certificateRequest)
         assertEquals(listOf(certificateRequest), HrDepartment.incomeBox, "Should be equal")
     }
 
@@ -126,7 +124,6 @@ internal class HrDepartmentTest {
         HrDepartment.clock = Clock.fixed(
             Instant.parse("2021-09-04T10:00:00Z"),
             ZoneOffset.UTC)
-        val certificateRequest = mockk<CertificateRequest>()
         every { certificateRequest.certificateType } returns CertificateType.NDFL
 
         //when
@@ -138,13 +135,13 @@ internal class HrDepartmentTest {
         verify(exactly = 0) {
             certificateRequest.certificateType
         }
+        confirmVerified(certificateRequest)
         assertEquals("Заказ справков в выходной день не работает", exception.message)
     }
 
     @Test
     fun `processNextRequestTest() should push certificate`() {
         //given
-        val certificateRequest = mockk<CertificateRequest>()
         val certificate = mockk<Certificate>()
         every { certificateRequest.process(1) } returns certificate
         HrDepartment.incomeBox.push(certificateRequest)
@@ -153,6 +150,17 @@ internal class HrDepartmentTest {
         HrDepartment.processNextRequest(1)
 
         //then
+        verify (exactly = 1) {
+            certificateRequest.process(1)
+        }
+        confirmVerified(certificateRequest)
         assertEquals(listOf(certificate), HrDepartment.outcomeOutcome, "Should be equal")
+    }
+
+    @AfterEach
+    fun tearDown() {
+        HrDepartment.incomeBox.clear()
+        HrDepartment.outcomeOutcome.clear()
+        unmockkAll()
     }
 }
