@@ -22,6 +22,12 @@ internal class CertificateRequestTest {
         //then
         assertEquals(1, certificate.processedBy)
         assertEquals(certificateRequest, certificate.certificateRequest)
+        assertNotNull(certificate.data)
+        assertEquals(100, certificate.data.size)
+        verify (exactly = 1) {
+            Random.Default.nextLong(5000L, 15000L)
+            Random.Default.nextBytes(100)
+        }
+        confirmVerified(Random.Default)
     }
-
 }
