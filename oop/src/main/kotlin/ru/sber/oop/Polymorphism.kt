@@ -27,6 +27,7 @@ class Player : Fightable {
 abstract class Monster : Fightable {
     abstract val name: String
     abstract val description: String
+    override val damageRoll = super<Fightable>.damageRoll
 
     override fun attack(opponent: Fightable): Int {
         opponent.healthPoints -= damageRoll
@@ -45,5 +46,3 @@ class Goblin : Monster() {
 }
 
 fun Monster.getSalutation() = "Hi! I am $name, a monster"
-
-
