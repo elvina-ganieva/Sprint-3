@@ -1,8 +1,11 @@
 package ru.sber.nio
 
+import java.nio.ByteBuffer
 import java.nio.file.Files
 import java.nio.file.Paths
+import java.nio.file.StandardOpenOption
 import kotlin.streams.toList
+
 
 /**
  * Реализовать простой аналог утилиты grep с использованием калссов из пакета java.nio.
@@ -19,24 +22,28 @@ class Grep {
      * 22-01-2001-1.log : 3 : 192.168.1.1 - - [22/Jan/2001:14:27:46 +0000] "POST /files HTTP/1.1" 200 - "-"
      */
     fun find(subString: String) {
-        val destPath = Paths.get("C:\\Users\\acer\\IdeaProjects\\Sprint-3\\io\\result.txt")
-        val path = Paths.get("C:\\Users\\acer\\IdeaProjects\\Sprint-3\\io\\logs\\")
 
-        Files.newBufferedWriter(destPath).use {
-            Files.walk(path).filter {
-                Files.isRegularFile(it)
-            }.forEach { path1 ->
-                val logLines = Files.lines(path1).toList()
-                logLines.forEachIndexed { index, element ->
-                    if (element.contains(subString)) {
-                        it.write("${path1.fileName} : ${index + 1} : $element")
+        val destinationPath = Paths.get("io/result.txt")
+        val sourcePath = Paths.get("io/logs")
+
+        try {
+            Files.newByteChannel(
+                destinationPath, StandardOpenOption.CREATE,
+                StandardOpenOption.WRITE
+            ).use {
+                Files.walk(sourcePath).filter { Files.isRegularFile(it) }.forEach { path ->
+                    val logLines = Files.lines(path).toList()
+                    logLines.forEachIndexed { index, element ->
+                        if (element.contains(subString)) {
+                            val byteData = "${path.fileName} : ${index + 1} : $element\n".toByteArray(Charsets.UTF_8)
+                            val byteBuffer = ByteBuffer.wrap(byteData)
+                            it.write(byteBuffer)
+                        }
                     }
                 }
             }
+        } catch (t: Throwable) {
+            throw t
         }
     }
-}
-
-fun main() {
-    Grep().find("22/Jan/2001:14:27:46")
 }
